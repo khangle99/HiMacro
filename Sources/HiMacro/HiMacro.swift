@@ -8,5 +8,5 @@ public macro SwiftyKey(name: String) = #externalMacro(module: "HiMacroMacros", t
 @attached(peer, names: overloaded)
 public macro SwiftyKeyIgnored() = #externalMacro(module: "HiMacroMacros", type: "SwiftyKeyIgnoredMacro")
 
-@attached(member, names: overloaded)
+@attached(member, names: arbitrary)
 public macro HiSwifty() = #externalMacro(module: "HiMacroMacros", type: "HiSwiftyMacro")
