@@ -58,8 +58,7 @@ public struct HiSwiftyMacro: MemberMacro {
             
             
             let initJson: DeclSyntax = """
-                              init(json: JSON) {
-                                \(raw: varList.joined(separator: "\n"))
+                              init(a: String) {
                               }
                               """
 
