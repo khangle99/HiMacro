@@ -18,7 +18,7 @@ public struct HiSwiftyMacro: MemberMacro {
         in context: some MacroExpansionContext) throws -> [DeclSyntax] {
             let memberList = declaration.memberBlock.members
             let varList = memberList.compactMap({ member -> String? in
-                
+           // return "\(member.debugDescription)"
              var typeKind: TypeKind = .primal
                 
               // is a property
@@ -57,9 +57,14 @@ public struct HiSwiftyMacro: MemberMacro {
                 typeNoOptional = isOptional ? typeNoOptional.replacingOccurrences(of: "?", with: "") : typeNoOptional
              
                 // Raw value enum handle
-                if let _ = member.decl.as(VariableDeclSyntax.self)?.attributes.first(where: { element in
+                var enumRawValue = ""
+                if let rawValueEnum = member.decl.as(VariableDeclSyntax.self)?.attributes.first(where: { element in
                     element.as(AttributeSyntax.self)?.attributeName.as(IdentifierTypeSyntax.self)?.description.trimmingCharacters(in: .whitespacesAndNewlines) == "RawValueEnum"
                 }) {
+                    enumRawValue = rawValueEnum.as(AttributeSyntax.self)!
+                      .arguments!.as(LabeledExprListSyntax.self)!
+                      .first!
+                      .expression.as(MemberAccessExprSyntax.self)?.base?.as(DeclReferenceExprSyntax.self)?.baseName.description.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
                     typeKind = .enumerate
                 }
                 
@@ -76,7 +81,7 @@ public struct HiSwiftyMacro: MemberMacro {
                   
                   return switch typeKind {
                   case .enumerate:
-                      "self.\(propertyName) = \(typeNoOptional)(rawValue: json[\(customKeyValue)].stringValue)"
+                      "self.\(propertyName) = \(typeNoOptional)(rawValue: json[\(customKeyValue)].\(swiftyJsonCodeToGetPrimalValue(type: enumRawValue, isOptional: false)))"
                   case .primal:
                       "self.\(propertyName) = json[\(customKeyValue)].\(swiftyGetValueStr)"
                   case .others:
@@ -86,7 +91,7 @@ public struct HiSwiftyMacro: MemberMacro {
               } else {
                  return switch typeKind {
                   case .enumerate:
-                      "self.\(propertyName) = \(typeNoOptional)(rawValue: json[\"\(propertyName)\"].stringValue)"
+                     "self.\(propertyName) = \(typeNoOptional)(rawValue: json[\"\(propertyName)\"].\(self.swiftyJsonCodeToGetPrimalValue(type: enumRawValue, isOptional: false)))"
                   case .primal:
                       "self.\(propertyName) = json[\"\(propertyName)\"].\(swiftyGetValueStr)"
                   case .others:

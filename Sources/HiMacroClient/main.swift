@@ -15,15 +15,15 @@ enum MyEnum: String {
 
 @HiSwifty
 class MyModel {
-    @SwiftyKey(name: "otherName")
-    @RawValueEnum
+    @SwiftyKey(name: "enum_key")
+    @RawValueEnum(Int.self)
     var myEnum: MyEnum? = .first
-    var name: String?
+//    var name: String?
 //    @SwiftyKey(name: "tuoi") var age: Int = 0
-   @SwiftyKeyIgnored let color: Cat?
+//   @SwiftyKeyIgnored let color: Cat?
 //    let sampleFloat: Float?
 //    @SwiftyKeyIgnored  let sampleDouble: Double
-    @SwiftyKey(name: "xe") let car: Car?
+//    @SwiftyKey(name: "xe") let car: Car?
 
 }
 
