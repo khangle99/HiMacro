@@ -7,15 +7,21 @@ class Car {
 
 class Cat {}
 
+enum MyEnum: String {
+    case first
+    case sec
+    case third
+}
 
 @HiSwifty
 class MyModel {
-    var name: String
-    @SwiftyKey(name: "tuoi") var age: Int = 0
-    @SwiftyKeyIgnored() let color: Cat?
-    let sampleFloat: Float?
+//    @RawValueEnum() var myEnum: MyEnum? = .first
+    var name: String?
+//    @SwiftyKey(name: "tuoi") var age: Int = 0
+//    @SwiftyKeyIgnored() let color: Cat?
+//    let sampleFloat: Float?
     let sampleDouble: Double
-    @SwiftyKey(name: "xe") let car: Car?
+//    @SwiftyKey(name: "xe") let car: Car?
 
 }
 

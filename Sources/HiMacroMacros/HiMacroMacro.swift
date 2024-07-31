@@ -23,15 +23,29 @@ public struct HiSwiftyMacro: MemberMacro {
                 return nil
               }
                 
-                
+                // ignore a variable
                 if let _ = member.decl.as(VariableDeclSyntax.self)?.attributes.first(where: { element in
                   element.as(AttributeSyntax.self)?.attributeName.as(IdentifierTypeSyntax.self)?.description == "SwiftyKeyIgnored"
                 }) {
                     return nil
                 }
                 
+                // Raw value enum handle
+                if let _ = member.decl.as(VariableDeclSyntax.self)?.attributes.first(where: { element in
+                  element.as(AttributeSyntax.self)?.attributeName.as(IdentifierTypeSyntax.self)?.description == "RawValueEnum"
+                }) {
+                    return "\(member.debugDescription)"
+                }
+                
+                var isOptional = false
+                if let _ = binding.typeAnnotation?.type.as(OptionalTypeSyntax.self) {
+                    isOptional = true
+                }
+
+                //return "\(member.debugDescription)"
+                
                 let isCustomType = self.isCustomType(typeStr: type)
-                let swiftyGetValueStr = self.swiftyJsonCodeToGetValue(type: type)
+                let swiftyGetValueStr = self.swiftyJsonCodeToGetValue(type: type, isOptional: isOptional)
                 var swiftyGetValueStrNoOptionalMark = type
                
                 if let _ = swiftyGetValueStrNoOptionalMark.firstIndex(of: "?") {
@@ -50,9 +64,13 @@ public struct HiSwiftyMacro: MemberMacro {
                   .first!
                   .expression
                   
-                  return isCustomType ? "self.\(propertyName) = \(swiftyGetValueStrNoOptionalMark)(json: json[\(customKeyValue)])" : "self.\(propertyName) = json[\(customKeyValue)].\(swiftyGetValueStr)"
+                  return isCustomType ? 
+                  "self.\(propertyName) = \(swiftyGetValueStrNoOptionalMark)(json: json[\(customKeyValue)])"
+                  : "self.\(propertyName) = json[\(customKeyValue)].\(swiftyGetValueStr)"
               } else {
-                  return isCustomType ? "self.\(propertyName) = \(swiftyGetValueStrNoOptionalMark)(json: json[\"\(propertyName)\"])" : "self.\(propertyName) = json[\"\(propertyName)\"].\(swiftyGetValueStr)"
+                  return isCustomType ? 
+                  "self.\(propertyName) = \(swiftyGetValueStrNoOptionalMark)(json: json[\"\(propertyName)\"])"
+                  : "self.\(propertyName) = json[\"\(propertyName)\"].\(swiftyGetValueStr)"
               }
             })
             
@@ -70,21 +88,39 @@ public struct HiSwiftyMacro: MemberMacro {
         return !["String", "String?", "Int", "Int?", "Bool", "Bool?", "Float", "Float?", "Double", "Double?"].contains(typeStr)
     }
     
-    static func swiftyJsonCodeToGetValue(type: String) -> String {
-        switch type {
-        case "String", "String?":
-            return "stringValue"
-        case "Int", "Int?":
-            return "intValue"
-        case "Double", "Double?":
-            return "doubleValue"
-        case "Float", "Float?":
-            return "floatValue"
-        case "Bool", "Bool?":
-            return "boolValue"
-        default:
-            return ""
+    static func swiftyJsonCodeToGetValue(type: String, isOptional: Bool) -> String {
+        if isOptional {
+            switch type {
+            case "String", "String?":
+                return "string"
+            case "Int", "Int?":
+                return "int"
+            case "Double", "Double?":
+                return "double"
+            case "Float", "Float?":
+                return "float"
+            case "Bool", "Bool?":
+                return "bool"
+            default:
+                return ""
+            }
+        } else {
+            switch type {
+            case "String", "String?":
+                return "stringValue"
+            case "Int", "Int?":
+                return "intValue"
+            case "Double", "Double?":
+                return "doubleValue"
+            case "Float", "Float?":
+                return "floatValue"
+            case "Bool", "Bool?":
+                return "boolValue"
+            default:
+                return ""
+            }
         }
+       
     }
 }
 
@@ -104,6 +140,12 @@ public struct SwiftyKeyIgnoredMacro: PeerMacro {
     }
 }
 
+public struct RawValueEnumMacro: PeerMacro {
+    public static func expansion(of node: AttributeSyntax, providingPeersOf declaration: some DeclSyntaxProtocol, in context: some MacroExpansionContext) throws -> [DeclSyntax] {
+        return []
+    }
+}
+
 
 @main
 struct HiMacroPlugin: CompilerPlugin {
@@ -111,5 +153,6 @@ struct HiMacroPlugin: CompilerPlugin {
         SwiftyKey.self,
         SwiftyKeyIgnoredMacro.self,
         HiSwiftyMacro.self,
+        RawValueEnumMacro.self
     ]
 }
